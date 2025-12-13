@@ -1,0 +1,81 @@
+/* Global styles */
+:root{
+  --bg: #ffffff;
+  --fg: #111111;
+  --muted: #6b7280;
+  --accent: #1f2937;
+  --outline-color: rgba(0,0,0,0.9);
+}
+
+[data-theme="dark"]{
+  --bg: #000000;
+  --fg: #ebebeb;
+  --muted: #9aa5b1;
+  --accent: #8bacc8;
+  --outline-color: rgba(255,255,255,0.92);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; display:flex; align-items:center; justify-content:center;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background:var(--bg); color:var(--fg);
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+
+.clock-app { width:100%; max-width:900px; padding:2rem; }
+.clock{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.5rem;
+  text-align:center; min-height:70vh; padding:2rem;
+}
+
+.date.small{
+  font-size:3.25rem; font-weight:500; color:var(--muted);
+  font-family: 'Rajdhani', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+}
+
+.time{ position:relative; width:100%; display:flex; align-items:baseline; justify-content:center; }
+
+.big{ font-size:20rem; line-height:0.95; font-weight:700; }
+.small{ font-size:3.5rem; }
+
+.digits{ font-family: 'Rajdhani', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+/* Outline-only (stroke) display to mimic OLED AOD. When enabled, text fill becomes transparent and only the stroke is visible. */
+[data-outline="true"] .digits{
+  color: transparent; /* fill becomes transparent */
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.01em var(--outline-color);
+  text-shadow: -1px 0 var(--bg), 0 1px var(--bg), 1px 0 var(---bg), 0 -1px var(--bg);
+}
+
+/* Grid-based hours/minutes layout to keep the ':' centered on screen regardless of seconds visibility */
+.hours-minutes{ display:grid; grid-template-columns: 1fr auto 1fr; align-items:baseline; gap:0.4rem; }
+.hours-minutes .hours{ justify-self:end; }
+.hours-minutes .minutes{ justify-self:start; }
+.hours-minutes .colon{ justify-self:center; position:relative; }
+
+/* Place seconds outside of normal flow so it does not shift the center colon */
+.seconds{ position:absolute; left: calc(50% + var(--hm-half, 0px) + 0.6rem); top: 50%; transform: translateY(-50%); }
+
+/* Seconds toggling style */
+[data-show-seconds="true"] .seconds{ opacity:1; }
+[data-show-seconds="false"] .seconds{ opacity:0; }
+.seconds{ transition: opacity 200ms ease; }
+[data-show-seconds="false"] .seconds{ opacity:0; }
+
+/* Dark border/accent */
+.clock{ border-radius:12px; padding:2rem; }
+
+/* Hint / keyboard guide */
+.hint{ margin-top:0.5rem; font-size:0.85rem; color:var(--muted); }
+.hint{ opacity:0; transition:opacity 300ms ease; pointer-events:none; }
+.hint.visible{ opacity:1; pointer-events:auto; }
+.hint kbd{ background:rgba(0,0,0,0.06); padding:0.15rem 0.4rem; border-radius:4px; border:1px solid rgba(0,0,0,0.05); font-family:inherit; }
+
+/* Small screens responsive */
+@media (max-width:480px){
+  .big{ font-size:3.8rem; }
+  .small{ font-size:1rem; }
+}
