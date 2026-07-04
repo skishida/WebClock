@@ -5,6 +5,9 @@ const hoursEl = document.getElementById('hours');
 const minutesEl = document.getElementById('minutes');
 const secEl = document.getElementById('seconds');
 const hintEl = document.getElementById('hint');
+const overlayEl = document.getElementById('overlay-ui');
+const fullscreenButtonEl = document.getElementById('fullscreen-button');
+const controlButtons = document.querySelectorAll('.control-button');
 const root = document.documentElement;
 
 // Preferences keys
@@ -35,12 +38,13 @@ function applyPrefs(){
   document.documentElement.setAttribute('data-show-seconds', prefs.showSeconds ? 'true':'false');
   document.documentElement.setAttribute('data-outline', prefs.outline ? 'true':'false');
   if(secEl){ secEl.setAttribute('aria-hidden', String(!prefs.showSeconds)); }
+  updateControlStates();
   // Update hint text to reflect current state
   if(hintEl){
     const themeState = prefs.theme || 'system';
     const secondsState = prefs.showSeconds ? 'on' : 'off';
     const outlineState = prefs.outline ? 'on' : 'off';
-    hintEl.innerHTML = `Press <kbd>d</kbd> toggle theme (${themeState}) • <kbd>s</kbd> toggle seconds (${secondsState}) • <kbd>o</kbd> outline (${outlineState})`;
+    hintEl.innerHTML = `Press <kbd>d</kbd> theme (${themeState}) • <kbd>s</kbd> seconds (${secondsState}) • <kbd>o</kbd> outline (${outlineState}) • tap buttons on tablet`;
   }
 }
 
@@ -61,6 +65,50 @@ function toggleSeconds(){
 
 function toggleOutline(){
   prefs.outline = !prefs.outline; applyPrefs(); savePrefs();
+}
+
+function canFullscreen(){
+  return Boolean(document.fullscreenEnabled && document.documentElement.requestFullscreen);
+}
+
+async function toggleFullscreen(){
+  if(!canFullscreen()) return;
+  try{
+    if(document.fullscreenElement){
+      await document.exitFullscreen();
+    } else {
+      await document.documentElement.requestFullscreen();
+    }
+  }catch(e){
+    // Ignore rejected fullscreen requests.
+  }
+  updateControlStates();
+}
+
+function updateControlStates(){
+  controlButtons.forEach((button) => {
+    const action = button.dataset.action;
+    if(action === 'theme'){
+      button.setAttribute('aria-pressed', String(Boolean(prefs.theme)));
+      button.textContent = `Theme: ${prefs.theme || 'system'}`;
+    }
+    if(action === 'seconds'){
+      button.setAttribute('aria-pressed', String(prefs.showSeconds));
+      button.textContent = `Seconds: ${prefs.showSeconds ? 'on' : 'off'}`;
+    }
+    if(action === 'outline'){
+      button.setAttribute('aria-pressed', String(prefs.outline));
+      button.textContent = `Outline: ${prefs.outline ? 'on' : 'off'}`;
+    }
+    if(action === 'fullscreen'){
+      const available = canFullscreen();
+      button.disabled = !available;
+      button.setAttribute('aria-pressed', String(Boolean(document.fullscreenElement)));
+      button.textContent = available
+        ? `Fullscreen: ${document.fullscreenElement ? 'on' : 'off'}`
+        : 'Fullscreen unavailable';
+    }
+  });
 }
 
 function pad(num, len=2){
@@ -109,24 +157,41 @@ window.addEventListener('keydown', (e) => {
   } else if(e.key === 'o'){
     toggleOutline();
     showHint();
+  } else if(e.key === 'f'){
+    toggleFullscreen();
+    showHint();
   }
+});
+
+controlButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const action = button.dataset.action;
+    if(action === 'theme') toggleTheme();
+    if(action === 'seconds') toggleSeconds();
+    if(action === 'outline') toggleOutline();
+    if(action === 'fullscreen') toggleFullscreen();
+    showHint();
+  });
 });
 
 // Recalculate HM width on resize
 window.addEventListener('resize', updateHmHalf);
+document.addEventListener('fullscreenchange', updateControlStates);
 
 // Hint show/hide behavior
 let hintTimer = null;
 function showHint(){
-  if(!hintEl) return;
-  hintEl.classList.add('visible');
+  if(!hintEl || !overlayEl) return;
+  overlayEl.classList.add('visible');
+  overlayEl.setAttribute('aria-hidden', 'false');
   hintEl.setAttribute('aria-hidden', 'false');
   if(hintTimer) clearTimeout(hintTimer);
   hintTimer = setTimeout(hideHint, 3000);
 }
 function hideHint(){
-  if(!hintEl) return;
-  hintEl.classList.remove('visible');
+  if(!hintEl || !overlayEl) return;
+  overlayEl.classList.remove('visible');
+  overlayEl.setAttribute('aria-hidden', 'true');
   hintEl.setAttribute('aria-hidden', 'true');
 }
 

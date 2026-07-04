@@ -5,6 +5,7 @@ A simple, static, GitHub Pages-friendly clock that reads the local PC time and s
 - WebFont for numeric display (from Google Fonts)
 - Dark mode / Light mode toggle via keyboard (`d` key)
 - Show/hide seconds via keyboard (`s` key)
+- Tablet-friendly touch controls for theme / seconds / outline / fullscreen
 - Desktop-friendly layout: date (small, displayed as yyyy/mm/dd), HH:MM (large), seconds (small, toggleable)
 	- Desktop-friendly layout: date (small, displayed as yyyy/mm/dd), HH:MM (large), seconds (small, toggleable)
 	- The HH:MM colon is centered on the page and does not shift when seconds are shown/hidden
@@ -31,6 +32,13 @@ Keyboard Shortcuts
 - `d` — toggle dark/light theme (press again to cycle back to system default)
 - `s` — toggle seconds on/off
 - `o` — toggle outline (stroke-only) mode for OLED-friendly always-on behaviour
+- `f` — toggle fullscreen if the browser allows the Fullscreen API
+
+Touch Controls
+--------------
+- Tap or move the pointer to reveal the control bar.
+- Use the on-screen buttons to toggle theme, seconds, outline, and fullscreen on tablets.
+- Fullscreen depends on browser support and user gesture permissions.
 
 Customization
 -------------
