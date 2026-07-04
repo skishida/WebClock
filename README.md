@@ -32,12 +32,14 @@ Keyboard Shortcuts
 - `d` — toggle dark/light theme (press again to cycle back to system default)
 - `s` — toggle seconds on/off
 - `o` — toggle outline (stroke-only) mode for OLED-friendly always-on behaviour
+- `i` — toggle outline fill between transparent and background-colored interior
 - `f` — toggle fullscreen if the browser allows the Fullscreen API
 
 Touch Controls
 --------------
 - Tap or move the pointer to reveal the control bar.
 - Use the on-screen buttons to toggle theme, seconds, outline, and fullscreen on tablets.
+- Use the on-screen buttons to toggle theme, seconds, outline, outline fill, and fullscreen on tablets.
 - Fullscreen depends on browser support and user gesture permissions.
 
 Customization

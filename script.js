@@ -13,7 +13,7 @@ const root = document.documentElement;
 // Preferences keys
 const PREFS_KEY = 'clock:prefs';
 
-const defaultPrefs = { theme: null, showSeconds: true, outline: false };
+const defaultPrefs = { theme: null, showSeconds: true, outline: false, outlineFillMatchesBg: false };
 let prefs = { ...defaultPrefs };
 
 function loadPrefs(){
@@ -37,6 +37,7 @@ function applyPrefs(){
   }
   document.documentElement.setAttribute('data-show-seconds', prefs.showSeconds ? 'true':'false');
   document.documentElement.setAttribute('data-outline', prefs.outline ? 'true':'false');
+  document.documentElement.setAttribute('data-outline-fill', prefs.outlineFillMatchesBg ? 'match-bg' : 'transparent');
   if(secEl){ secEl.setAttribute('aria-hidden', String(!prefs.showSeconds)); }
   updateControlStates();
   // Update hint text to reflect current state
@@ -44,7 +45,8 @@ function applyPrefs(){
     const themeState = prefs.theme || 'system';
     const secondsState = prefs.showSeconds ? 'on' : 'off';
     const outlineState = prefs.outline ? 'on' : 'off';
-    hintEl.innerHTML = `Press <kbd>d</kbd> theme (${themeState}) • <kbd>s</kbd> seconds (${secondsState}) • <kbd>o</kbd> outline (${outlineState}) • tap buttons on tablet`;
+    const fillState = prefs.outlineFillMatchesBg ? 'bg' : 'clear';
+    hintEl.innerHTML = `Press <kbd>d</kbd> theme (${themeState}) • <kbd>s</kbd> seconds (${secondsState}) • <kbd>o</kbd> outline (${outlineState}) • <kbd>i</kbd> fill (${fillState}) • tap buttons on tablet`;
   }
 }
 
@@ -65,6 +67,10 @@ function toggleSeconds(){
 
 function toggleOutline(){
   prefs.outline = !prefs.outline; applyPrefs(); savePrefs();
+}
+
+function toggleOutlineFill(){
+  prefs.outlineFillMatchesBg = !prefs.outlineFillMatchesBg; applyPrefs(); savePrefs();
 }
 
 function canFullscreen(){
@@ -99,6 +105,10 @@ function updateControlStates(){
     if(action === 'outline'){
       button.setAttribute('aria-pressed', String(prefs.outline));
       button.textContent = `Outline: ${prefs.outline ? 'on' : 'off'}`;
+    }
+    if(action === 'outline-fill'){
+      button.setAttribute('aria-pressed', String(prefs.outlineFillMatchesBg));
+      button.textContent = `Fill: ${prefs.outlineFillMatchesBg ? 'bg' : 'clear'}`;
     }
     if(action === 'fullscreen'){
       const available = canFullscreen();
@@ -157,6 +167,9 @@ window.addEventListener('keydown', (e) => {
   } else if(e.key === 'o'){
     toggleOutline();
     showHint();
+  } else if(e.key === 'i'){
+    toggleOutlineFill();
+    showHint();
   } else if(e.key === 'f'){
     toggleFullscreen();
     showHint();
@@ -169,6 +182,7 @@ controlButtons.forEach((button) => {
     if(action === 'theme') toggleTheme();
     if(action === 'seconds') toggleSeconds();
     if(action === 'outline') toggleOutline();
+    if(action === 'outline-fill') toggleOutlineFill();
     if(action === 'fullscreen') toggleFullscreen();
     showHint();
   });

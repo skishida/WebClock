@@ -5,6 +5,7 @@
   --muted: #6b7280;
   --accent: #1f2937;
   --outline-color: rgba(0,0,0,0.9);
+  --outline-fill: transparent;
   --panel-bg: rgba(255,255,255,0.72);
   --panel-border: rgba(17,17,17,0.1);
 }
@@ -15,8 +16,13 @@
   --muted: #9aa5b1;
   --accent: #8bacc8;
   --outline-color: rgba(255,255,255,0.92);
+  --outline-fill: transparent;
   --panel-bg: rgba(11,18,32,0.72);
   --panel-border: rgba(255,255,255,0.12);
+}
+
+[data-outline-fill="match-bg"]{
+  --outline-fill: var(--bg);
 }
 
 *{box-sizing:border-box}
@@ -48,8 +54,8 @@ body{
 
 /* Outline-only (stroke) display to mimic OLED AOD. When enabled, text fill becomes transparent and only the stroke is visible. */
 [data-outline="true"] .digits{
-  color: transparent; /* fill becomes transparent */
-  -webkit-text-fill-color: transparent;
+  color: var(--outline-fill);
+  -webkit-text-fill-color: var(--outline-fill);
   -webkit-text-stroke: 0.01em var(--outline-color);
   text-shadow: -1px 0 var(--outline-color), 0 1px var(--outline-color), 1px 0 var(--outline-color), 0 -1px var(--outline-color);
 }
