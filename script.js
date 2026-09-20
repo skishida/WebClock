@@ -8,19 +8,59 @@ const hintEl = document.getElementById('hint');
 const overlayEl = document.getElementById('overlay-ui');
 const fullscreenButtonEl = document.getElementById('fullscreen-button');
 const controlButtons = document.querySelectorAll('.control-button');
+const sizeMenuEl = document.getElementById('size-menu');
+const sizeSliders = document.querySelectorAll('.size-slider');
+const sizeStepButtons = document.querySelectorAll('.size-step');
 const root = document.documentElement;
 
 // Preferences keys
 const PREFS_KEY = 'clock:prefs';
 
-const defaultPrefs = { theme: null, showSeconds: true, outline: false, outlineFillMatchesBg: false };
+// Font size adjustment: each target scales its base font size defined in styles.css
+const SIZE_TARGETS = {
+  time:    { prefKey: 'timeScale',    cssVar: '--scale-time',    min: 0.4, max: 1.6, step: 0.02 },
+  date:    { prefKey: 'dateScale',    cssVar: '--scale-date',    min: 0.4, max: 2.0, step: 0.02 },
+  seconds: { prefKey: 'secondsScale', cssVar: '--scale-seconds', min: 0.4, max: 2.0, step: 0.02 }
+};
+
+const defaultPrefs = {
+  theme: null,
+  showSeconds: true,
+  outline: false,
+  outlineFillMatchesBg: false,
+  timeScale: 1,
+  dateScale: 1,
+  secondsScale: 1
+};
 let prefs = { ...defaultPrefs };
+let sizeMenuOpen = false;
+
+function clampScale(target, value){
+  const config = SIZE_TARGETS[target];
+  if(!config) return 1;
+  // null/undefined/empty values fall back to the unscaled default instead of the minimum
+  if(value === null || value === undefined || value === '') return 1;
+  const num = Number(value);
+  if(!Number.isFinite(num)) return 1;
+  // Snap to the configured step so stored values stay aligned with the sliders
+  const snapped = Math.round(num / config.step) * config.step;
+  return Math.min(config.max, Math.max(config.min, Number(snapped.toFixed(4))));
+}
+
+function getScale(target){
+  return clampScale(target, prefs[SIZE_TARGETS[target].prefKey]);
+}
 
 function loadPrefs(){
   try{
     const raw = localStorage.getItem(PREFS_KEY);
     if(raw){ prefs = { ...defaultPrefs, ...JSON.parse(raw) } }
   }catch(e){ /* ignore */ }
+  // Stored scales may be missing or out of range, so normalize them
+  Object.keys(SIZE_TARGETS).forEach((target) => {
+    prefs[SIZE_TARGETS[target].prefKey] = clampScale(target, prefs[SIZE_TARGETS[target].prefKey]);
+  });
+  initSizeMenu();
   applyPrefs();
 }
 
@@ -39,6 +79,7 @@ function applyPrefs(){
   document.documentElement.setAttribute('data-outline', prefs.outline ? 'true':'false');
   document.documentElement.setAttribute('data-outline-fill', prefs.outlineFillMatchesBg ? 'match-bg' : 'transparent');
   if(secEl){ secEl.setAttribute('aria-hidden', String(!prefs.showSeconds)); }
+  applySizes();
   updateControlStates();
   // Update hint text to reflect current state
   if(hintEl){
@@ -46,7 +87,8 @@ function applyPrefs(){
     const secondsState = prefs.showSeconds ? 'on' : 'off';
     const outlineState = prefs.outline ? 'on' : 'off';
     const fillState = prefs.outlineFillMatchesBg ? 'bg' : 'clear';
-    hintEl.innerHTML = `Press <kbd>d</kbd> theme (${themeState}) • <kbd>s</kbd> seconds (${secondsState}) • <kbd>o</kbd> outline (${outlineState}) • <kbd>i</kbd> fill (${fillState}) • tap buttons on tablet`;
+    const sizeState = formatScale(getScale('time'));
+    hintEl.innerHTML = `Press <kbd>d</kbd> theme (${themeState}) • <kbd>s</kbd> seconds (${secondsState}) • <kbd>o</kbd> outline (${outlineState}) • <kbd>i</kbd> fill (${fillState}) • <kbd>m</kbd> size menu • <kbd>-</kbd>/<kbd>+</kbd> size (${sizeState}) • tap buttons on tablet`;
   }
 }
 
@@ -71,6 +113,84 @@ function toggleOutline(){
 
 function toggleOutlineFill(){
   prefs.outlineFillMatchesBg = !prefs.outlineFillMatchesBg; applyPrefs(); savePrefs();
+}
+
+
+function formatScale(value){
+  return `${Math.round(value * 100)}%`;
+}
+
+function applySizes(){
+  Object.keys(SIZE_TARGETS).forEach((target) => {
+    const config = SIZE_TARGETS[target];
+    document.documentElement.style.setProperty(config.cssVar, String(getScale(target)));
+  });
+  updateSizeMenuUI();
+  // Digit widths changed, so the centered colon offset needs recomputing
+  updateHmHalf();
+}
+
+function initSizeMenu(){
+  sizeSliders.forEach((slider) => {
+    const config = SIZE_TARGETS[slider.dataset.sizeTarget];
+    if(!config) return;
+    slider.min = String(config.min);
+    slider.max = String(config.max);
+    slider.step = String(config.step);
+  });
+}
+
+function updateSizeMenuUI(){
+  sizeSliders.forEach((slider) => {
+    const target = slider.dataset.sizeTarget;
+    const config = SIZE_TARGETS[target];
+    if(!config) return;
+    const value = getScale(target);
+    if(slider.value !== String(value)) slider.value = String(value);
+    const output = document.getElementById(`size-${target}-value`);
+    if(output) output.textContent = formatScale(value);
+  });
+  sizeStepButtons.forEach((button) => {
+    const target = button.dataset.sizeTarget;
+    const config = SIZE_TARGETS[target];
+    if(!config) return;
+    const value = getScale(target);
+    const delta = Number(button.dataset.sizeStep);
+    button.disabled = delta < 0 ? value <= config.min : value >= config.max;
+  });
+}
+
+function setScale(target, value){
+  const config = SIZE_TARGETS[target];
+  if(!config) return;
+  const next = clampScale(target, value);
+  if(prefs[config.prefKey] === next){ updateSizeMenuUI(); return; }
+  prefs[config.prefKey] = next;
+  applyPrefs(); savePrefs();
+}
+
+function nudgeScale(target, steps){
+  const config = SIZE_TARGETS[target];
+  if(!config) return;
+  setScale(target, getScale(target) + config.step * steps);
+}
+
+function resetSizes(){
+  Object.keys(SIZE_TARGETS).forEach((target) => {
+    prefs[SIZE_TARGETS[target].prefKey] = defaultPrefs[SIZE_TARGETS[target].prefKey];
+  });
+  applyPrefs(); savePrefs();
+}
+
+function setSizeMenu(open){
+  sizeMenuOpen = Boolean(open);
+  if(sizeMenuEl) sizeMenuEl.hidden = !sizeMenuOpen;
+  updateControlStates();
+  if(sizeMenuOpen) showHint();
+}
+
+function toggleSizeMenu(){
+  setSizeMenu(!sizeMenuOpen);
 }
 
 function canFullscreen(){
@@ -109,6 +229,11 @@ function updateControlStates(){
     if(action === 'outline-fill'){
       button.setAttribute('aria-pressed', String(prefs.outlineFillMatchesBg));
       button.textContent = `Fill: ${prefs.outlineFillMatchesBg ? 'bg' : 'clear'}`;
+    }
+    if(action === 'size'){
+      button.setAttribute('aria-pressed', String(sizeMenuOpen));
+      button.setAttribute('aria-expanded', String(sizeMenuOpen));
+      button.textContent = `Size: ${formatScale(getScale('time'))}`;
     }
     if(action === 'fullscreen'){
       const available = canFullscreen();
@@ -173,6 +298,20 @@ window.addEventListener('keydown', (e) => {
   } else if(e.key === 'f'){
     toggleFullscreen();
     showHint();
+  } else if(e.key === 'm'){
+    toggleSizeMenu();
+    showHint();
+  } else if(e.key === '-' || e.key === '_'){
+    nudgeScale('time', -1);
+    showHint();
+  } else if(e.key === '+' || e.key === '='){
+    nudgeScale('time', 1);
+    showHint();
+  } else if(e.key === '0'){
+    resetSizes();
+    showHint();
+  } else if(e.key === 'Escape' && sizeMenuOpen){
+    setSizeMenu(false);
   }
 });
 
@@ -183,7 +322,23 @@ controlButtons.forEach((button) => {
     if(action === 'seconds') toggleSeconds();
     if(action === 'outline') toggleOutline();
     if(action === 'outline-fill') toggleOutlineFill();
+    if(action === 'size') toggleSizeMenu();
+    if(action === 'size-reset') resetSizes();
     if(action === 'fullscreen') toggleFullscreen();
+    showHint();
+  });
+});
+
+sizeSliders.forEach((slider) => {
+  slider.addEventListener('input', () => {
+    setScale(slider.dataset.sizeTarget, slider.value);
+    showHint();
+  });
+});
+
+sizeStepButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    nudgeScale(button.dataset.sizeTarget, Number(button.dataset.sizeStep));
     showHint();
   });
 });
@@ -204,6 +359,8 @@ function showHint(){
 }
 function hideHint(){
   if(!hintEl || !overlayEl) return;
+  // The adjustment menu needs the overlay to stay put while it is in use
+  if(sizeMenuOpen) return;
   overlayEl.classList.remove('visible');
   overlayEl.setAttribute('aria-hidden', 'true');
   hintEl.setAttribute('aria-hidden', 'true');
