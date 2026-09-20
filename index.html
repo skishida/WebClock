@@ -26,11 +26,39 @@
       </div>
       <div class="overlay-ui" id="overlay-ui" aria-hidden="true">
         <div id="hint" class="hint" aria-hidden="true">Press <kbd>d</kbd> to toggle dark/light, <kbd>s</kbd> to toggle seconds</div>
+        <div class="size-menu" id="size-menu" role="group" aria-label="Font size adjustment" hidden>
+          <div class="size-row">
+            <span class="size-label" id="size-time-label">Time</span>
+            <button type="button" class="size-step" data-size-target="time" data-size-step="-1" aria-label="Decrease time size">&minus;</button>
+            <input type="range" class="size-slider" id="size-time" data-size-target="time" aria-labelledby="size-time-label">
+            <button type="button" class="size-step" data-size-target="time" data-size-step="1" aria-label="Increase time size">+</button>
+            <output class="size-value" id="size-time-value" for="size-time">100%</output>
+          </div>
+          <div class="size-row">
+            <span class="size-label" id="size-date-label">Date</span>
+            <button type="button" class="size-step" data-size-target="date" data-size-step="-1" aria-label="Decrease date size">&minus;</button>
+            <input type="range" class="size-slider" id="size-date" data-size-target="date" aria-labelledby="size-date-label">
+            <button type="button" class="size-step" data-size-target="date" data-size-step="1" aria-label="Increase date size">+</button>
+            <output class="size-value" id="size-date-value" for="size-date">100%</output>
+          </div>
+          <div class="size-row">
+            <span class="size-label" id="size-seconds-label">Seconds</span>
+            <button type="button" class="size-step" data-size-target="seconds" data-size-step="-1" aria-label="Decrease seconds size">&minus;</button>
+            <input type="range" class="size-slider" id="size-seconds" data-size-target="seconds" aria-labelledby="size-seconds-label">
+            <button type="button" class="size-step" data-size-target="seconds" data-size-step="1" aria-label="Increase seconds size">+</button>
+            <output class="size-value" id="size-seconds-value" for="size-seconds">100%</output>
+          </div>
+          <div class="size-footer">
+            <span class="size-note">Fine tune with <kbd>-</kbd> / <kbd>+</kbd>, reset with <kbd>0</kbd>, toggle with <kbd>m</kbd></span>
+            <button type="button" class="control-button size-reset" data-action="size-reset">Reset sizes</button>
+          </div>
+        </div>
         <div class="control-bar" aria-label="Display controls">
           <button type="button" class="control-button" data-action="theme">Theme</button>
           <button type="button" class="control-button" data-action="seconds">Seconds</button>
           <button type="button" class="control-button" data-action="outline">Outline</button>
           <button type="button" class="control-button" data-action="outline-fill">Fill</button>
+          <button type="button" class="control-button" data-action="size" id="size-button" aria-expanded="false" aria-controls="size-menu">Size</button>
           <button type="button" class="control-button" data-action="fullscreen" id="fullscreen-button">Fullscreen</button>
         </div>
       </div>
