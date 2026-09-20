@@ -45,6 +45,7 @@ Touch Controls
 - Use the on-screen buttons to toggle theme, seconds, outline, and fullscreen on tablets.
 - Use the on-screen buttons to toggle theme, seconds, outline, outline fill, and fullscreen on tablets.
 - Fullscreen depends on browser support and user gesture permissions.
+- The font size menu is fully operable by touch: tap `Size`, then use the sliders or the `-` / `+` buttons. Its controls use 44px touch targets and the control bar stays on screen while the menu is open.
 
 Font Size Menu
 --------------
@@ -53,7 +54,13 @@ Font Size Menu
 - Drag the slider for coarse changes, or tap the `-` / `+` buttons for 2% steps.
 - Ranges are 40%-160% for the time and 40%-200% for the date and seconds, relative to the default layout size.
 - `Reset sizes` restores every element to 100%.
-- The menu keeps the control overlay on screen while it is open, and the chosen sizes are stored in `localStorage` together with the other preferences.
+- The menu keeps the control overlay on screen while it is open, and the chosen sizes are stored together with the other preferences.
+
+Stored Data
+-----------
+- All preferences (theme, seconds, outline, outline fill, font sizes) are kept in `localStorage` under the single key `clock:prefs`.
+- No cookies are used and nothing is sent to a server; the data stays in the browser profile on that device and is removed when site data is cleared.
+- When storage is unavailable (private mode, blocked site data), reads and writes fail silently and the clock falls back to the default settings.
 
 Customization
 -------------
